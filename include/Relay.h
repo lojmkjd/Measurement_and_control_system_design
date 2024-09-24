@@ -5,11 +5,18 @@
 
 #include "reg52.h"
 
-// 声明继电器引脚
-sbit relayPin=P2^0;
+// 定义继电器控制引脚
+sbit relayPin = P2^0; // 继电器控制引脚定义
 
-// 声明函数
+// 函数声明
+/**
+ * @brief 关闭继电器
+ */
 void relayClosed(void);
+
+/**
+ * @brief 打开继电器
+ */
 void relayOpened(void);
 
 #endif // RELAY_H

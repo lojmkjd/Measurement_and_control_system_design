@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 17:32:50 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 19:23:12 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -8,7 +8,7 @@ COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\main.c OPTIM
 
 line level    source
 
-   1          /*main.c*/
+   1          /* main.c */
    2          #include "include/18B20.h"
    3          #include "include/ComCDT.h"
    4          #include "include/Relay.h"
@@ -16,182 +16,189 @@ line level    source
    6          #include "include/pid_controller.h"
    7          #include "include/IKeyEvent.h"
    8          
-   9          #define TIMER_0_RELOADS_VALUE 1000    // 定时器0重装值，为每1ms
-  10          #define TEMP_CONVERSION_FACTOR 0.0625 // 温度转换系数
-  11          #define LOWER_TEMP_LIMIT 25            
-  12          #define UPPER_TEMP_LIMIT 30
-  13          #define TARGET_TEMPERATURE 28 // 目标温度
-  14          
-  15          typedef struct
-  16          {
-  17              void (*taskFunction)(void);
-  18              unsigned int period;
-  19              unsigned int nextExecution;
-  20          } Task;
-  21          
-  22          #define MAX_TASKS 5
-  23          Task tasks[MAX_TASKS];
-  24          unsigned char taskCount = 0;
-  25          
-  26          // 调度器函数声明
-  27          void initializeSystem();
-  28          void addTask(void (*taskFunction)(void), unsigned int period);
-  29          void scheduler();
-  30          
-  31          // 任务函数声明
-  32          void taskTemperatureUpdate();
-  33          void taskControlRelay();
-  34          
-  35          // 定时器函数声明
-  36          void initializeTimer0();
-  37          void timer0InterruptHandling(void);
-  38          
-  39          // 全局变量声明
-  40          unsigned int currentTime = 0;                   // 当前时间，为中断周期的整数倍，时间单�
-             -��为1ms
-  41          unsigned char temperature = 0;                  // 温度值
-  42          unsigned char integerPart = 0, decimalPart = 0; // 温度的整数部分和小数部分
-  43          unsigned char setpoint=TARGET_TEMPERATURE; // 目标温度
-  44          unsigned char integral=0;  // 积分值
-  45          unsigned char previous_error=0; // 上一个误差
-  46          bit displayTemperatureOrTime=1;
-  47          
-  48          void main(void)
-  49          {
-  50   1          // 初始化DS19B20模块
-  51   1          Init_DS18B20();
-  52   1      
-  53   1          // 初始化调度器
-C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 17:32:50 PAGE 2   
+   9          // 定义常量
+  10          #define TIMER_0_RELOADS_VALUE 1000    // 定时器0重装值，为每1ms
+  11          #define TEMP_CONVERSION_FACTOR 0.0625 // 温度转换系数
+  12          #define LOWER_TEMP_LIMIT 25           // 温度下限
+  13          #define UPPER_TEMP_LIMIT 30           // 温度上限
+  14          #define TARGET_TEMPERATURE 28         // 目标温度
+  15          
+  16          // 任务调度器的任务结构体
+  17          typedef struct
+  18          {
+  19              void (*taskFunction)(void); // 任务函数指针
+  20              unsigned int period;        // 任务执行的周期
+  21              unsigned int nextExecution; // 任务下次执行的时间
+  22          } Task;
+  23          
+  24          #define MAX_TASKS 5
+  25          Task tasks[MAX_TASKS];       // 任务列表
+  26          unsigned char taskCount = 0; // 任务数量
+  27          
+  28          // 调度器函数声明
+  29          void initializeSystem();
+  30          void addTask(void (*taskFunction)(void), unsigned int period);
+  31          void scheduler();
+  32          
+  33          // 任务函数声明
+  34          void taskTemperatureUpdate();
+  35          void taskControlRelay();
+  36          
+  37          // 定时器函数声明
+  38          void initializeTimer0();
+  39          void timer0InterruptHandling(void);
+  40          
+  41          // 全局变量声明
+  42          unsigned int currentTime = 0;                   // 当前时间，以1ms为单位
+  43          unsigned char temperature = 0;                  // 当前温度
+  44          unsigned char integerPart = 0, decimalPart = 0; // 温度的整数部分和小数部分
+  45          unsigned char setpoint = TARGET_TEMPERATURE;    // 目标温度
+  46          unsigned char integral = 0;                     // PID积分项
+  47          unsigned char previous_error = 0;               // 上一个误差
+  48          bit displayTemperatureOrTime = 1;               // 控制温度/时间显示切换
+  49          
+  50          void main(void)
+  51          {
+  52   1          // 初始化DS18B20温度传感器模块
+  53   1          Init_DS18B20();
+  54   1      
+C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 19:23:12 PAGE 2   
 
-  54   1          initializeSystem();
-  55   1      
-  56   1          // 无限循环
-  57   1          while (1)
-  58   1          {
-  59   2              // 扫描键盘事件
-  60   2              checkButtons();
-  61   2      
-  62   2              // 调用调度器
-  63   2              scheduler();
-  64   2          }
-  65   1      }
-  66          
-  67          // 初始化系统函数
-  68          void initializeSystem()
-  69          {
-  70   1          // 初始化定时器0
-  71   1          initializeTimer0();
-  72   1          // 添加任务到调度器
-  73   1          addTask(taskTemperatureUpdate, 8); // 每8s执行一次温度显示更新
-  74   1          addTask(taskControlRelay, 1000);   // 每1s时间单位执行一次继电器控制
-  75   1      }
-  76          
-  77          // 初始化定时器
-  78          void initializeTimer0()
-  79          {
-  80   1          // 设置定时器0为模式1（16位定时器/计数器模式）
-  81   1          TMOD &= 0xF0; // 清除定时器 0 的模式位
-  82   1          TMOD |= 0x01; // 设置定时器 0 为模式 1（16 位定时器）
-  83   1      
-  84   1          // 初始化定时器0的初值
-  85   1          TH0 = (65536 - TIMER_0_RELOADS_VALUE) / 256;
-  86   1          TL0 = (65536 - TIMER_0_RELOADS_VALUE) % 256;
-  87   1      
-  88   1          // 开启全局中断
-  89   1          EA = 1;
-  90   1          // 开启定时器0中断
-  91   1          ET0 = 1;
-  92   1          // 启动定时器0
-  93   1          TR0 = 1;
-  94   1      }
-  95          
-  96          // 定时器0中断处理函数
-  97          void timer0InterruptHandling(void) interrupt 1
-  98          {
-  99   1          // 重新装载定时器0的初值
- 100   1          TH0 = (65536 - TIMER_0_RELOADS_VALUE) / 256;
- 101   1          TL0 = (65536 - TIMER_0_RELOADS_VALUE) % 256;
- 102   1      
- 103   1          // 每次溢出都使用当前时间加1
- 104   1          currentTime++;
- 105   1      }
- 106          
- 107          // 添加任务的函数
- 108          void addTask(void (*taskFunction)(void), unsigned int period)
- 109          {
- 110   1          if (taskCount < MAX_TASKS)
- 111   1          {
- 112   2              tasks[taskCount].taskFunction = taskFunction;
- 113   2              tasks[taskCount].period = period;
- 114   2              tasks[taskCount].nextExecution = currentTime + period;
- 115   2              taskCount++;
-C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 17:32:50 PAGE 3   
+  55   1          // 初始化调度器和任务
+  56   1          initializeSystem();
+  57   1      
+  58   1          // 无限循环
+  59   1          while (1)
+  60   1          {
+  61   2              // 扫描按键事件
+  62   2              checkButtons();
+  63   2      
+  64   2              // 调用调度器处理任务
+  65   2              scheduler();
+  66   2          }
+  67   1      }
+  68          
+  69          // 初始化系统
+  70          void initializeSystem()
+  71          {
+  72   1          // 初始化定时器0
+  73   1          initializeTimer0();
+  74   1      
+  75   1          // 添加任务到调度器
+  76   1          addTask(taskTemperatureUpdate, 8000); // 每8秒更新一次温度显示
+  77   1          addTask(taskControlRelay, 1000);      // 每1秒控制一次继电器
+  78   1      }
+  79          
+  80          // 初始化定时器0
+  81          void initializeTimer0()
+  82          {
+  83   1          // 设置定时器0为模式1（16位定时器/计数器模式）
+  84   1          TMOD &= 0xF0; // 清除定时器0的模式位
+  85   1          TMOD |= 0x01; // 设置定时器0为模式1（16位定时器）
+  86   1      
+  87   1          // 初始化定时器0的初值
+  88   1          TH0 = (65536 - TIMER_0_RELOADS_VALUE) / 256;
+  89   1          TL0 = (65536 - TIMER_0_RELOADS_VALUE) % 256;
+  90   1      
+  91   1          // 开启全局中断和定时器0中断
+  92   1          EA = 1;
+  93   1          ET0 = 1;
+  94   1      
+  95   1          // 启动定时器0
+  96   1          TR0 = 1;
+  97   1      }
+  98          
+  99          // 定时器0中断处理函数
+ 100          void timer0InterruptHandling(void) interrupt 1
+ 101          {
+ 102   1          // 重新装载定时器0的初值
+ 103   1          TH0 = (65536 - TIMER_0_RELOADS_VALUE) / 256;
+ 104   1          TL0 = (65536 - TIMER_0_RELOADS_VALUE) % 256;
+ 105   1      
+ 106   1          // 更新当前时间，每次中断表示1ms
+ 107   1          currentTime++;
+ 108   1      }
+ 109          
+ 110          // 添加任务
+ 111          void addTask(void (*taskFunction)(void), unsigned int period)
+ 112          {
+ 113   1          if (taskCount < MAX_TASKS)
+ 114   1          {
+ 115   2              tasks[taskCount].taskFunction = taskFunction;
+ 116   2              tasks[taskCount].period = period;
+C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 19:23:12 PAGE 3   
 
- 116   2          }
- 117   1      }
- 118          
- 119          // 温度-时间显示更新
- 120          void taskTemperatureUpdate()
- 121          {
- 122   1          // 读取温度
- 123   1          temperature = ReadTemperature() * TEMP_CONVERSION_FACTOR;
- 124   1      
- 125   1          // 计算温度的整数部分和小数部分
- 126   1          integerPart = (unsigned int)temperature;
- 127   1          decimalPart = (unsigned int)((temperature - integerPart + 0.5) * 100);
- 128   1      
- 129   1          if(displayTemperatureOrTime==1){
- 130   2              // 调用晶体管显示
- 131   2          displayTemperature(integerPart, decimalPart);
- 132   2          }else{
- 133   2              // 调用数码管显示
- 134   2          displayTime(60);
- 135   2          }
- 136   1      }
- 137          
- 138          void taskControlRelay(){
- 139   1          // 如果温度低于下限温度
- 140   1          if (temperature < LOWER_TEMP_LIMIT) {
- 141   2              // 打开继电器
- 142   2              relayOpened();
- 143   2              // 发出蜂鸣器警告
- 144   2              buzzerOn();
- 145   2          }
- 146   1          // 如果温度高于上限温度
- 147   1          else if (temperature > UPPER_TEMP_LIMIT) {
- 148   2              // 关闭继电器
- 149   2              relayClosed();
- 150   2              // 发出蜂鸣器警告
- 151   2              buzzerOn();
- 152   2          }
- 153   1          // 如果温度在上下限之间
- 154   1          else {
- 155   2              pIDControl();
- 156   2              buzzerOff();
- 157   2          }
- 158   1      }
- 159          
- 160          // 调度器函数
- 161          void scheduler() {
- 162   1          unsigned char i;
- 163   1          for (i = 0; i < taskCount; i++) {
- 164   2              if (currentTime >= tasks[i].nextExecution) {
- 165   3                  tasks[i].taskFunction(); // 调用任务函数
- 166   3                  tasks[i].nextExecution = currentTime + tasks[i].period; // 更新下次执行时间
- 167   3              }
- 168   2          }
- 169   1      }
+ 117   2              tasks[taskCount].nextExecution = currentTime + period;
+ 118   2              taskCount++;
+ 119   2          }
+ 120   1      }
+ 121          
+ 122          // 温度更新任务
+ 123          void taskTemperatureUpdate()
+ 124          {
+ 125   1          // 读取温度并转换为实际温度值
+ 126   1          temperature = ReadTemperature() * TEMP_CONVERSION_FACTOR;
+ 127   1      
+ 128   1          // 计算温度的整数部分和小数部分
+ 129   1          integerPart = (unsigned int)temperature;
+ 130   1          decimalPart = (unsigned int)((temperature - integerPart) * 100 + 0.5);
+ 131   1      
+ 132   1          // 根据显示模式，显示温度或时间
+ 133   1          if (displayTemperatureOrTime == 1)
+ 134   1          {
+ 135   2              displayTemperature(integerPart, decimalPart);
+ 136   2          }
+ 137   1          else
+ 138   1          {
+ 139   2              displayTime(60); // 示例：显示60分钟
+ 140   2          }
+ 141   1      }
+ 142          
+ 143          // 继电器控制任务
+ 144          void taskControlRelay()
+ 145          {
+ 146   1          // 控制逻辑：低于下限温度打开继电器并蜂鸣，超过上限关闭继电器并蜂鸣
+ 147   1          if (temperature < LOWER_TEMP_LIMIT)
+ 148   1          {
+ 149   2              relayOpened();
+ 150   2              buzzerOn();
+ 151   2          }
+ 152   1          else if (temperature > UPPER_TEMP_LIMIT)
+ 153   1          {
+ 154   2              relayClosed();
+ 155   2              buzzerOn();
+ 156   2          }
+ 157   1          else
+ 158   1          {
+ 159   2              // 使用PID控制温度在目标范围内
+ 160   2              pIDControl();
+ 161   2              buzzerOff();
+ 162   2          }
+ 163   1      }
+ 164          
+ 165          // 调度器：检查并执行每个任务
+ 166          void scheduler()
+ 167          {
+ 168   1          unsigned char i;
+ 169   1          for (i = 0; i < taskCount; i++)
+ 170   1          {
+ 171   2              if (currentTime >= tasks[i].nextExecution)
+ 172   2              {
+ 173   3                  tasks[i].taskFunction();                                // 执行任务
+ 174   3                  tasks[i].nextExecution = currentTime + tasks[i].period; // 更新下次执行时间
+ 175   3              }
+ 176   2          }
+ 177   1      }
+
+C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 19:23:12 PAGE 4   
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    349    ----
+   CODE SIZE        =    351    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =     44       1
-C51 COMPILER V9.60.7.0   MAIN                                                              09/24/2024 17:32:50 PAGE 4   
-
    IDATA SIZE       =   ----    ----
    BIT SIZE         =      1    ----
 END OF MODULE INFORMATION.

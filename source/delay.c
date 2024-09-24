@@ -1,10 +1,15 @@
-/*delay.c*/
+/* delay.c */
 #include "include/delay.h"
 
+/**
+ * @brief 2x延迟微秒函数
+ * 
+ * @param t 要延迟的次数（每次循环约1个微秒）
+ */
 void DelayUs2x(unsigned char t)
 {
     // 循环直到 t 减到 0
-    while(--t);
+    while (--t);
 }
 
 /**
@@ -17,10 +22,10 @@ void DelayUs2x(unsigned char t)
 void DelayMs(unsigned char t)
 {
     // 循环 t 次
-    while(t--) {
+    while (t--) {
         // 调用 DelayUs2x 函数，参数为 245，延迟一段时间
-        DelayUs2x(245);
+        DelayUs2x(245); // 第一次延迟
         // 再次调用 DelayUs2x 函数，参数为 245，继续延迟一段时间
-        DelayUs2x(245);
+        DelayUs2x(245); // 第二次延迟
     }
 }
