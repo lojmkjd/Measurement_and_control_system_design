@@ -1,0 +1,53 @@
+C51 COMPILER V9.60.7.0   PID_CONTROLLER                                                    09/24/2024 17:32:50 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE PID_CONTROLLER
+OBJECT MODULE PLACED IN .\Objects\pid_controller.obj
+COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\pid_controller.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJE
+                    -CTEXTEND PRINT(.\Listings\pid_controller.lst) TABS(2) OBJECT(.\Objects\pid_controller.obj)
+
+line level    source
+
+   1          /*pid_controller.c*/
+   2          
+   3          #include "include/pid_controller.h"
+   4          #include "include/relay.h"
+   5          #include "include/buzzer.h"
+   6          #include "reg52.h"
+   7          
+   8          
+   9          void pIDControl() {
+  10   1          // 确保在函数开始时声明所有变量
+  11   1          float error;
+  12   1          float output;
+  13   1          float derivative; // 声明变量，不赋值
+  14   1      
+  15   1          error = setpoint - temperature; // 计算误差
+  16   1          integral += error; // 更新积分值
+  17   1          derivative = error - previous_error; // 计算微分值
+  18   1          previous_error = error; // 保存当前误差
+  19   1      
+  20   1          // 计算 PID 输出
+  21   1          output = (KP * error) + (KI * integral) + (KD * derivative);
+  22   1      
+  23   1          // 根据 PID 输出控制继电器
+  24   1          if (output > 0) {
+  25   2              relayOpened();
+  26   2          } else {
+  27   2              relayClosed();
+  28   2          }
+  29   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    190    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      12
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

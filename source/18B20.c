@@ -1,3 +1,4 @@
+/*18B20.c*/
 #include "include/delay.h"
 #include "include/18B20.h"
 
@@ -67,15 +68,21 @@ void WriteOneChar(unsigned char dat)
     DelayUs2x(25);
 }
 
-unsigned int ReadTemperature(void)
-{
+unsigned int ReadTemperature(void) {
     unsigned char a = 0;
     unsigned int b = 0;
     unsigned int t = 0;
-    Init_DS18B20();
+
+    // 初始化温度传感器
+    if (!Init_DS18B20()) {
+        // 处理初始化错误
+        return 0xFFFF; // 返回错误代码
+    }
+
     WriteOneChar(0xCC);
     WriteOneChar(0x44);
     DelayMs(10);
+
     Init_DS18B20();
     WriteOneChar(0xCC);
     WriteOneChar(0xBE);
@@ -83,5 +90,12 @@ unsigned int ReadTemperature(void)
     b = ReadOneChar();
     b <<= 8;
     t = a + b;
-    return(t);
+
+    // 检查温度值的有效性
+    if (t < 0 || t > 1000) { // 假设有效温度范围
+        return 0xFFFF; // 返回错误代码
+    }
+
+    return t;
 }
+

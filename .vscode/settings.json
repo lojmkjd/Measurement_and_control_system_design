@@ -2,6 +2,9 @@
     "files.associations": {
         "comcdt.h": "c",
         "buzzer.h": "c",
-        "delay.h": "c"
+        "delay.h": "c",
+        "18b20.h": "c",
+        "ikeyevent.h": "c",
+        "pid_controller.h": "c"
     }
 }

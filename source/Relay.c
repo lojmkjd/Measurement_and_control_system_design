@@ -1,3 +1,4 @@
+/*Relay.c*/ 
 #include "reg52.h"
 
 // 继电器引脚定义

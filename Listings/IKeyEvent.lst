@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   IKEYEVENT                                                         09/23/2024 18:56:44 PAGE 1   
+C51 COMPILER V9.60.7.0   IKEYEVENT                                                         09/24/2024 17:32:50 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE IKEYEVENT
@@ -8,45 +8,42 @@ COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\IKeyEvent.c 
 
 line level    source
 
-   1          #include "reg52.h"
-   2          #include "include/delay.h"
-   3          #include "include/IKeyEvent.h"
-   4          
-   5          extern bit TEMPERATURE_OR_TIME;
-   6          extern bit IS_THE_RELAY_RUNNING;
-   7          #define DEBOUNCE_DELAY 2
-   8          
-   9          void checkButtonState(bit stateFlag, bit button) {
-  10   1          // 如果按钮状态等于防抖延迟时间
-  11   1          if (button == 0) {
-  12   2              // 延迟2毫秒
-  13   2              DelayMs(DEBOUNCE_DELAY);
-  14   2              // 如果按钮状态为0（按下状态）
-  15   2              if (button == 0) {
-  16   3                  // 切换状态标志位的值
-  17   3                  stateFlag = !(stateFlag);
-  18   3              }
-  19   2              // 等待按钮状态不为0（即等待按钮释放）
-  20   2              while (!button);
-  21   2          }
-  22   1      }
-  23          
-  24          void checkButtons(void) {
-  25   1          // 检查温度或时间按钮的状态
-  26   1          checkButtonState(TEMPERATURE_OR_TIME, switchButton);
-  27   1          // 检查继电器是否正在运行的按钮状态
-  28   1          checkButtonState(IS_THE_RELAY_RUNNING, startButton);
-  29   1      }
+   1          /*IKeyEvent.c*/
+   2          #include "reg52.h"
+   3          #include "include/delay.h"
+   4          #include "include/IKeyEvent.h"
+   5          
+   6          #define DEBOUNCE_DELAY 2
+   7          
+   8          void checkButtonState(bit button) {
+   9   1          // 如果按钮状态等于防抖延迟时间
+  10   1          if (button == 0) {
+  11   2              // 延迟2毫秒
+  12   2              DelayMs(DEBOUNCE_DELAY);
+  13   2              // 如果按钮状态为0（按下状态）
+  14   2              if (button == 0) {
+  15   3                  displayTemperatureOrTime = !displayTemperatureOrTime; // 切换状态
+  16   3                  DelayMs(DEBOUNCE_DELAY); // 延迟2毫秒
+  17   3              }
+  18   2              // 等待按钮状态不为0（即等待按钮释放）
+  19   2              while (!button);
+  20   2          }
+  21   1      }
+  22          
+  23          void checkButtons(void) {
+  24   1          // 检查温度或时间按钮的状态
+  25   1          checkButtonState(switchButton); // 更新状态
+  26   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     39    ----
+   CODE SIZE        =     29    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----       2
+   BIT SIZE         =   ----       1
 END OF MODULE INFORMATION.
 
 

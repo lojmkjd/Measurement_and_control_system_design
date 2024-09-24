@@ -421,6 +421,11 @@
               <FileType>1</FileType>
               <FilePath>.\source\Relay.c</FilePath>
             </File>
+            <File>
+              <FileName>pid_controller.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\pid_controller.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

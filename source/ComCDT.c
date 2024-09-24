@@ -1,3 +1,4 @@
+/*ComCDT.c*/
 #include "reg52.h"
 #include "include/delay.h"
 #include "include/ComCDT.h"
@@ -43,7 +44,7 @@ void displayDigit(unsigned char digit, unsigned char position) {
     // 将数字与掩码进行与运算，并将结果输出到P0端口
     P0 = table[digit] & mask;
     // 延时
-    DelayUs2x(10); 
+    DelayUs2x(45); // 短暂延时50us
     // 将P0端口设置为高电平
     P0 = 0xFF; 
 

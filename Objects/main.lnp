@@ -5,6 +5,7 @@
 ".\Objects\ComCDT.obj",
 ".\Objects\delay.obj",
 ".\Objects\IKeyEvent.obj",
-".\Objects\Relay.obj" 
+".\Objects\Relay.obj",
+".\Objects\pid_controller.obj" 
 TO ".\Objects\main" 
 PRINT(".\Listings\main.m51") RAMSIZE(256) 
