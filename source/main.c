@@ -5,6 +5,7 @@
 #include "include/buzzer.h"
 #include "include/pid_controller.h"
 #include "include/IKeyEvent.h"
+#include "include/serial.h"
 
 // 定义常量
 #define TIMER_0_RELOADS_VALUE 1000    // 定时器0重装值，为每1ms
@@ -33,6 +34,7 @@ void scheduler();
 // 任务函数声明
 void taskTemperatureUpdate();
 void taskControlRelay();
+void taskSendTemperature();
 
 // 定时器函数声明
 void initializeTimer0();
@@ -47,10 +49,14 @@ unsigned char integral = 0;                     // PID积分项
 unsigned char previous_error = 0;               // 上一个误差
 bit displayTemperatureOrTime = 1;               // 控制温度/时间显示切换
 
+
 void main(void)
 {
     // 初始化DS18B20温度传感器模块
     Init_DS18B20();
+
+    // 初始化串口
+    initSerial(); // 初始化串口函数
 
     // 初始化调度器和任务
     initializeSystem();
@@ -75,6 +81,7 @@ void initializeSystem()
     // 添加任务到调度器
     addTask(taskTemperatureUpdate, 8); // 每8毫秒更新一次温度显示
     addTask(taskControlRelay, 1000);      // 每1秒控制一次继电器
+    addTask(taskSendTemperature, 1000);    // 每1秒发送一次温度信息
 }
 
 // 初始化定时器0
@@ -174,4 +181,12 @@ void scheduler()
             tasks[i].nextExecution = currentTime + tasks[i].period; // 更新下次执行时间
         }
     }
+}
+
+// 发送温度任务
+void taskSendTemperature()
+{
+    char buffer[20];
+    sprintf(buffer, "Temperature: %d.%02d\n", integerPart, decimalPart);
+    sendSerial(buffer); // 发送温度信息
 }
