@@ -73,7 +73,7 @@ void initializeSystem()
     initializeTimer0();
 
     // 添加任务到调度器
-    addTask(taskTemperatureUpdate, 8000); // 每8秒更新一次温度显示
+    addTask(taskTemperatureUpdate, 8); // 每8毫秒更新一次温度显示
     addTask(taskControlRelay, 1000);      // 每1秒控制一次继电器
 }
 
