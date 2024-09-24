@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   DELAY                                                             09/24/2024 19:23:13 PAGE 1   
+C51 COMPILER V9.60.7.0   DELAY                                                             09/24/2024 21:09:52 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE DELAY
@@ -8,32 +8,37 @@ COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\delay.c OPTI
 
 line level    source
 
-   1          /*delay.c*/
+   1          /* delay.c */
    2          #include "include/delay.h"
    3          
-   4          void DelayUs2x(unsigned char t)
-   5          {
-   6   1          // 循环直到 t 减到 0
-   7   1          while(--t);
-   8   1      }
-   9          
-  10          /**
-  11           * @brief 延迟毫秒函数
-  12           *
-  13           * 通过循环调用 DelayUs2x 函数实现毫秒级别的延迟。
-  14           *
-  15           * @param t 延迟的毫秒数
-  16           */
-  17          void DelayMs(unsigned char t)
-  18          {
-  19   1          // 循环 t 次
-  20   1          while(t--) {
-  21   2              // 调用 DelayUs2x 函数，参数为 245，延迟一段时间
-  22   2              DelayUs2x(245);
-  23   2              // 再次调用 DelayUs2x 函数，参数为 245，继续延迟一段时间
-  24   2              DelayUs2x(245);
-  25   2          }
-  26   1      }
+   4          /**
+   5           * @brief 2x延迟微秒函数
+   6           * 
+   7           * @param t 要延迟的次数（每次循环约1个微秒）
+   8           */
+   9          void DelayUs2x(unsigned char t)
+  10          {
+  11   1          // 循环直到 t 减到 0
+  12   1          while (--t);
+  13   1      }
+  14          
+  15          /**
+  16           * @brief 延迟毫秒函数
+  17           *
+  18           * 通过循环调用 DelayUs2x 函数实现毫秒级别的延迟。
+  19           *
+  20           * @param t 延迟的毫秒数
+  21           */
+  22          void DelayMs(unsigned char t)
+  23          {
+  24   1          // 循环 t 次
+  25   1          while (t--) {
+  26   2              // 调用 DelayUs2x 函数，参数为 245，延迟一段时间
+  27   2              DelayUs2x(245); // 第一次延迟
+  28   2              // 再次调用 DelayUs2x 函数，参数为 245，继续延迟一段时间
+  29   2              DelayUs2x(245); // 第二次延迟
+  30   2          }
+  31   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BUZZER                                                            09/24/2024 19:23:13 PAGE 1   
+C51 COMPILER V9.60.7.0   BUZZER                                                            09/24/2024 21:09:52 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BUZZER
@@ -13,21 +13,30 @@ line level    source
    3          #include "reg52.h"
    4          #include "include/delay.h"
    5          
-   6          void setBuzzerState(unsigned char state)
-   7          {
-   8   1          buzzerPin = state; // 设置蜂鸣器状态，0 为开，1 为关
-   9   1      }
-  10          
-  11          void buzzerOn(void)
-  12          {
-  13   1          setBuzzerState(1); // 打开蜂鸣器
-  14   1      }
-  15          
-  16          void buzzerOff(void)
-  17          {
-  18   1          setBuzzerState(0); // 关闭蜂鸣器
-  19   1      }
-  20          
+   6          /**
+   7           * @brief 设置蜂鸣器的状态
+   8           * @param state 蜂鸣器的状态，0 为关，1 为开
+   9           */
+  10          void setBuzzerState(unsigned char state)
+  11          {
+  12   1          buzzerPin = state; // 设置蜂鸣器引脚状态
+  13   1      }
+  14          
+  15          /**
+  16           * @brief 打开蜂鸣器
+  17           */
+  18          void buzzerOn(void)
+  19          {
+  20   1          setBuzzerState(1); // 打开蜂鸣器
+  21   1      }
+  22          
+  23          /**
+  24           * @brief 关闭蜂鸣器
+  25           */
+  26          void buzzerOff(void)
+  27          {
+  28   1          setBuzzerState(0); // 关闭蜂鸣器
+  29   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE

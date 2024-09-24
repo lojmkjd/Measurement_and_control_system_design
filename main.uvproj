@@ -426,6 +426,11 @@
               <FileType>1</FileType>
               <FilePath>.\source\pid_controller.c</FilePath>
             </File>
+            <File>
+              <FileName>serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\serial.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

@@ -6,6 +6,8 @@
 #include "include/pid_controller.h"
 #include "include/IKeyEvent.h"
 #include "include/serial.h"
+#include <stdio.h>
+
 
 // 定义常量
 #define TIMER_0_RELOADS_VALUE 1000    // 定时器0重装值，为每1ms
@@ -81,7 +83,7 @@ void initializeSystem()
     // 添加任务到调度器
     addTask(taskTemperatureUpdate, 8); // 每8毫秒更新一次温度显示
     addTask(taskControlRelay, 1000);      // 每1秒控制一次继电器
-    addTask(taskSendTemperature, 1000);    // 每1秒发送一次温度信息
+    addTask(taskSendTemperature, 500);    // 每0.5毫秒发送一次温度信息
 }
 
 // 初始化定时器0

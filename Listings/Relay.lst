@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   RELAY                                                             09/24/2024 19:23:13 PAGE 1   
+C51 COMPILER V9.60.7.0   RELAY                                                             09/24/2024 21:09:52 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE RELAY
@@ -8,21 +8,29 @@ COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\Relay.c OPTI
 
 line level    source
 
-   1          /*Relay.c*/ 
+   1          /* Relay.c */
    2          #include "reg52.h"
    3          
    4          // 继电器引脚定义
-   5          sbit relayPin=P1^4;
+   5          sbit relayPin = P1^4; // 定义继电器控制引脚
    6          
-   7          void relayClosed()
-   8          {
-   9   1          relayPin=1; // 关闭继电器
-  10   1      }
-  11          
-  12          void relayOpened()
-  13          {
-  14   1          relayPin=0; // 打开继电器
-  15   1      }
+   7          /**
+   8           * @brief 关闭继电器
+   9           * 
+  10           * 将继电器引脚设置为高电平（关闭状态）
+  11           */
+  12          void relayClosed() {
+  13   1          relayPin = 1; // 关闭继电器
+  14   1      }
+  15          
+  16          /**
+  17           * @brief 打开继电器
+  18           * 
+  19           * 将继电器引脚设置为低电平（打开状态）
+  20           */
+  21          void relayOpened() {
+  22   1          relayPin = 0; // 打开继电器
+  23   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
