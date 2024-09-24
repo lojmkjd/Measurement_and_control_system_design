@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "comcdt.h": "c",
+        "buzzer.h": "c",
+        "delay.h": "c"
+    }
+}

@@ -1,0 +1,103 @@
+C51 COMPILER V9.60.7.0   COMCDT                                                            09/23/2024 18:56:44 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE COMCDT
+OBJECT MODULE PLACED IN .\Objects\ComCDT.obj
+COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\ComCDT.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND
+                    - PRINT(.\Listings\ComCDT.lst) TABS(2) OBJECT(.\Objects\ComCDT.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "include/delay.h"
+   3          #include "include/ComCDT.h"
+   4          
+   5          unsigned char table[] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90};
+   6          
+   7          void displayTemperature(unsigned char integerPart , unsigned char decimalPart){
+   8   1          // 显示整数部分
+   9   1          displayDigit(integerPart / 10, 0); // 十位
+  10   1          displayDigit(integerPart % 10, 1); // 个位
+  11   1          // 显示小数部分
+  12   1          displayDigit(decimalPart / 10, 2); // 小数第一位
+  13   1          displayDigit(decimalPart % 10, 3); // 小数第二位
+  14   1      }
+  15          
+  16          void displayDigit(unsigned char digit, unsigned char position) {
+  17   1          // 根据位置设置掩码
+  18   1          unsigned char mask = (position == 1) ? 0x7F : 0xFF;
+  19   1      
+  20   1          // 根据位置进行不同操作
+  21   1          switch (position) {
+  22   2              case 0:
+  23   2                  // 十位数字位设置为0
+  24   2                  dig_ten = 0;
+  25   2                  break;
+  26   2              case 1:
+  27   2                  // 个位数字位设置为0
+  28   2                  dig_unit = 0;
+  29   2                  break;
+  30   2              case 2:
+  31   2                  // 第一位小数位设置为0
+  32   2                  firstDecimalPlace = 0;
+  33   2                  break;
+  34   2              case 3:
+  35   2                  // 第二位小数位设置为0
+  36   2                  secondDecimalPlace = 0;
+  37   2                  break;
+  38   2              default:
+  39   2                  // 无效位置，直接返回
+  40   2                  return;
+  41   2          }
+  42   1      
+  43   1          // 将数字与掩码进行与运算，并将结果输出到P0端口
+  44   1          P0 = table[digit] & mask;
+  45   1          // 延时
+  46   1          DelayUs2x(10); 
+  47   1          // 将P0端口设置为高电平
+  48   1          P0 = 0xFF; 
+  49   1      
+  50   1          // 根据位置进行不同操作
+  51   1          switch (position) {
+  52   2              case 0:
+  53   2                  // 十位数字位设置为1
+  54   2                  dig_ten = 1;
+C51 COMPILER V9.60.7.0   COMCDT                                                            09/23/2024 18:56:44 PAGE 2   
+
+  55   2                  break;
+  56   2              case 1:
+  57   2                  // 个位数字位设置为1
+  58   2                  dig_unit = 1;
+  59   2                  break;
+  60   2              case 2:
+  61   2                  // 第一位小数位设置为1
+  62   2                  firstDecimalPlace = 1;
+  63   2                  break;
+  64   2              case 3:
+  65   2                  // 第二位小数位设置为1
+  66   2                  secondDecimalPlace = 1;
+  67   2                  break;
+  68   2          }
+  69   1      }
+  70          void displayTime(unsigned int totalSeconds) {
+  71   1          // 将总秒数转换为总分钟数
+  72   1          unsigned int totalMinutes = totalSeconds / 60;
+  73   1          // 显示总分钟数的十位数
+  74   1          displayDigit(totalMinutes / 10, 2);
+  75   1          // 显示总分钟数的个位数
+  76   1          displayDigit(totalMinutes % 10, 3);
+  77   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    180    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

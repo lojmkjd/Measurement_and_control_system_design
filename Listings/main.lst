@@ -1,0 +1,188 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              09/23/2024 18:56:44 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND P
+                    -RINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "include/18B20.h"
+   2          #include "include/delay.h"
+   3          #include "include/ComCDT.h"
+   4          #include "include/IKeyEvent.h"
+   5          #include "include/Relay.h"
+   6          #include "include/buzzer.h"
+   7          
+   8          #define TEMPERATURE_REFRESH_CYCLE 500  
+   9          #define BUZZER_WARNING_DURATION 3000   
+  10          #define TIMER0_RELOAD_VALUE 2000       
+  11          #define LOWER_TEMP_LIMIT 25            
+  12          #define UPPER_TEMP_LIMIT 30            
+  13          #define TIME_DISPLAY_VALUE 60          
+  14          #define TEMP_CONVERSION_FACTOR 0.0625  
+  15          
+  16          unsigned int nReadTemperatureCycle = TEMPERATURE_REFRESH_CYCLE; // 温度读取循环周期
+  17          bit bReadTemperatureIndicator = 0; // 温度读取指示器
+  18          bit TEMPERATURE_OR_TIME = 1; // 指示当前是温度还是时间控制
+  19          bit IS_THE_RELAY_RUNNING = 0; // 继电器是否正在运行
+  20          bit buzzerIsOn = 0; // 蜂鸣器是否开启
+  21          unsigned int buzzerCountdown = 0; // 蜂鸣器倒计时
+  22          unsigned char integerPart = 0, decimalPart = 0; // 温度的整数部分和小数部分
+  23          unsigned int LOWER_LIMIT_TEMPERATURE = LOWER_TEMP_LIMIT; // 温度下限
+  24          unsigned int UPPER_LIMIT_TEMPERATURE = UPPER_TEMP_LIMIT; // 温度上限
+  25          float temperature; // 当前温度
+  26          
+  27          // 初始化定时器0的函数
+  28          void initializeTimer0();
+  29          
+  30          // 更新温度显示的函数
+  31          void updateTemperatureDisplay();
+  32          
+  33          // 计算当前温度的函数
+  34          float calculateTemperature();
+  35          
+  36          // 根据温度控制继电器的函数
+  37          void controlRelayBasedOnTemperature();
+  38          
+  39          // 处理蜂鸣器的函数
+  40          void handleBuzzer();
+  41          
+  42          void initializeTimer0() {
+  43   1          // 设置定时器0为模式1（16位定时器/计数器模式）
+  44   1          TMOD |= 0x01;  
+  45   1      
+  46   1          // 开启全局中断
+  47   1          EA = 1;        
+  48   1      
+  49   1          // 开启定时器0中断
+  50   1          ET0 = 1;       
+  51   1      
+  52   1          // 启动定时器0
+  53   1          TR0 = 1;       
+  54   1      }
+C51 COMPILER V9.60.7.0   MAIN                                                              09/23/2024 18:56:44 PAGE 2   
+
+  55          
+  56          void timer0InterruptHandling(void) interrupt 1 {
+  57   1          // 初始化定时器0的初值
+  58   1          static unsigned int nReinstallTimes = 0;
+  59   1          TH0 = (65536 - TIMER0_RELOAD_VALUE) / 256;
+  60   1          TL0 = (65536 - TIMER0_RELOAD_VALUE) % 256;
+  61   1      
+  62   1          // 重装计数器
+  63   1          nReinstallTimes++;
+  64   1          
+  65   1          // 根据条件显示温度或时间
+  66   1          if (TEMPERATURE_OR_TIME) {
+  67   2              displayTemperature(integerPart, decimalPart);
+  68   2          } else {
+  69   2              displayTime(TIME_DISPLAY_VALUE);
+  70   2          }
+  71   1      
+  72   1          // 达到一定重装次数后，重置并设置读温度标志
+  73   1          if (nReinstallTimes >= nReadTemperatureCycle / 2) {
+  74   2              nReinstallTimes = 0;
+  75   2              bReadTemperatureIndicator = 1;
+  76   2          }
+  77   1      
+  78   1          // 处理蜂鸣器逻辑
+  79   1          handleBuzzer();
+  80   1      }
+  81          
+  82          void handleBuzzer() {
+  83   1          // 如果蜂鸣器正在响且倒计时大于0
+  84   1          if (buzzerIsOn && buzzerCountdown > 0) {
+  85   2              // 倒计时减一
+  86   2              buzzerCountdown--;
+  87   2              // 如果倒计时为0
+  88   2              if (buzzerCountdown == 0) {
+  89   3                  // 关闭蜂鸣器
+  90   3                  buzzerOff();
+  91   3                  // 设置蜂鸣器状态为关闭
+  92   3                  buzzerIsOn = 0;
+  93   3              }
+  94   2          }
+  95   1      }
+  96          
+  97          void initializeSystem() {
+  98   1          // 初始化定时器0
+  99   1          initializeTimer0();
+ 100   1      }
+ 101          
+ 102          void updateTemperatureDisplay() {
+ 103   1          // 如果温度读取指示标志为真
+ 104   1          if (bReadTemperatureIndicator) {
+ 105   2              // 将温度读取指示标志置为假
+ 106   2              bReadTemperatureIndicator = 0;
+ 107   2              // 计算温度值
+ 108   2              temperature = calculateTemperature();
+ 109   2              // 将温度值转换为整数部分
+ 110   2              integerPart = (unsigned int)temperature;
+ 111   2              // 将温度值的小数部分乘以100并转换为整数部分
+ 112   2              decimalPart = (unsigned int)((temperature - integerPart) * 100);
+ 113   2          }
+ 114   1      }
+ 115          
+ 116          float calculateTemperature() {
+C51 COMPILER V9.60.7.0   MAIN                                                              09/23/2024 18:56:44 PAGE 3   
+
+ 117   1          // 调用ReadTemperature函数获取温度值
+ 118   1          // 将温度值乘以转换因子TEMP_CONVERSION_FACTOR
+ 119   1          return ReadTemperature() * TEMP_CONVERSION_FACTOR;
+ 120   1      }
+ 121          
+ 122          void controlRelayBasedOnTemperature() {
+ 123   1          // 判断继电器是否正在运行
+ 124   1          if (IS_THE_RELAY_RUNNING) {
+ 125   2              // 如果温度低于下限温度
+ 126   2              if (temperature < LOWER_LIMIT_TEMPERATURE) {
+ 127   3                  // 关闭继电器
+ 128   3                  relayClosed();
+ 129   3                  // 发出蜂鸣器警告，持续时间为BUZZER_WARNING_DURATION
+ 130   3                  buzzerWarning(BUZZER_WARNING_DURATION);
+ 131   3              // 如果温度高于上限温度
+ 132   3              } else if (temperature > UPPER_LIMIT_TEMPERATURE) {
+ 133   3                  // 打开继电器
+ 134   3                  relayOpened();
+ 135   3                  // 发出蜂鸣器警告，持续时间为BUZZER_WARNING_DURATION
+ 136   3                  buzzerWarning(BUZZER_WARNING_DURATION);
+ 137   3              }
+ 138   2          // 如果继电器未运行
+ 139   2          } else {
+ 140   2              // 关闭继电器
+ 141   2              relayClosed();
+ 142   2          }
+ 143   1      }
+ 144          
+ 145          void main(void) {
+ 146   1          // 初始化系统
+ 147   1          initializeSystem();
+ 148   1      
+ 149   1          // 无限循环
+ 150   1          while (1) {
+ 151   2              // 检查按钮状态
+ 152   2              checkButtons();
+ 153   2      
+ 154   2              // 更新温度显示
+ 155   2              updateTemperatureDisplay();
+ 156   2      
+ 157   2              // 根据温度控制继电器
+ 158   2              controlRelayBasedOnTemperature();
+ 159   2          }
+ 160   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    328    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,113 @@
+C51 COMPILER V9.60.7.0   18B20                                                             09/23/2024 18:56:44 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE 18B20
+OBJECT MODULE PLACED IN .\Objects\18B20.obj
+COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\18B20.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND 
+                    -PRINT(.\Listings\18B20.lst) TABS(2) OBJECT(.\Objects\18B20.obj)
+
+line level    source
+
+   1          #include "include/delay.h"
+   2          #include "include/18B20.h"
+   3          
+   4          bit Init_DS18B20(void)
+   5          {
+   6   1          // 初始化变量dat为0
+   7   1          bit dat = 0;
+   8   1      
+   9   1          // 将DQ置为高电平
+  10   1          DQ = 1;
+  11   1          // 延时5微秒
+  12   1          DelayUs2x(5);
+  13   1      
+  14   1          // 将DQ置为低电平
+  15   1          DQ = 0;
+  16   1          // 延时200微秒
+  17   1          DelayUs2x(200);
+  18   1          // 延时200微秒
+  19   1          DelayUs2x(200);
+  20   1      
+  21   1          // 将DQ置为高电平
+  22   1          DQ = 1;
+  23   1          // 延时50微秒
+  24   1          DelayUs2x(50);
+  25   1      
+  26   1          // 读取DQ的值赋给dat
+  27   1          dat = DQ;
+  28   1          // 延时25微秒
+  29   1          DelayUs2x(25);
+  30   1      
+  31   1          // 返回dat的值
+  32   1          return dat;
+  33   1      }
+  34          
+  35          unsigned char ReadOneChar(void)
+  36          {
+  37   1          unsigned char i = 0;
+  38   1          unsigned char dat = 0;
+  39   1          // 循环8次，每次读取一位数据
+  40   1          for(i = 8; i > 0; i--) {
+  41   2              // 将DQ置为0
+  42   2              DQ = 0;
+  43   2              // 将dat右移一位
+  44   2              dat >>= 1;
+  45   2              // 将DQ置为1
+  46   2              DQ = 1;
+  47   2              // 如果DQ为高电平，则将dat的最高位设为1
+  48   2              if(DQ)
+  49   2                  dat |= 0x80;
+  50   2              // 延时25微秒
+  51   2              DelayUs2x(25);
+  52   2          }
+  53   1          // 返回读取到的字符
+  54   1          return(dat);
+C51 COMPILER V9.60.7.0   18B20                                                             09/23/2024 18:56:44 PAGE 2   
+
+  55   1      }
+  56          
+  57          void WriteOneChar(unsigned char dat)
+  58          {
+  59   1          unsigned char i = 0;
+  60   1          for(i = 8; i > 0; i--) {
+  61   2              DQ = 0;
+  62   2              DQ = dat & 0x01;
+  63   2              DelayUs2x(25);
+  64   2              DQ = 1;
+  65   2              dat >>= 1;
+  66   2          }
+  67   1          DelayUs2x(25);
+  68   1      }
+  69          
+  70          unsigned int ReadTemperature(void)
+  71          {
+  72   1          unsigned char a = 0;
+  73   1          unsigned int b = 0;
+  74   1          unsigned int t = 0;
+  75   1          Init_DS18B20();
+  76   1          WriteOneChar(0xCC);
+  77   1          WriteOneChar(0x44);
+  78   1          DelayMs(10);
+  79   1          Init_DS18B20();
+  80   1          WriteOneChar(0xCC);
+  81   1          WriteOneChar(0xBE);
+  82   1          a = ReadOneChar();
+  83   1          b = ReadOneChar();
+  84   1          b <<= 8;
+  85   1          t = a + b;
+  86   1          return(t);
+  87   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    183    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
