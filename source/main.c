@@ -83,7 +83,7 @@ void initializeSystem()
     // 添加任务到调度器
     addTask(taskTemperatureUpdate, 10); // 每10毫秒更新一次温度
     addTask(taskControlRelay, 1000);    // 每1秒控制一次继电器
-    addTask(taskControlBuzzer, 2);      // 每1秒发送一次温度信息
+    addTask(taskControlBuzzer, 2);      // 每2ms发送一次温度信息
     // addTask(taskSendTemperature, 500);  // 每0.5秒发送一次温度信息
 }
 
