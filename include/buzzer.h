@@ -4,8 +4,8 @@
 #include "reg52.h"
 
 // 引脚定义:
-// 定义蜂鸣器连接的引脚（P1.0）
-sbit buzzerPin = P1^0; 
+// 定义蜂鸣器连接的引脚（P2.7）
+sbit buzzerPin = P2^7; 
 
 // 函数声明
 

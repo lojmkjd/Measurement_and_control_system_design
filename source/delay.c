@@ -1,5 +1,6 @@
 /* delay.c */
 #include "include/delay.h"
+#include <intrins.h>
 
 /**
  * @brief 2x延迟微秒函数

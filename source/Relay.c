@@ -1,5 +1,7 @@
 /* Relay.c */
 #include "reg52.h"
+#include <intrins.h>
+#include "include/delay.h"
 
 // 继电器引脚定义
 sbit relayPin = P1^4; // 定义继电器控制引脚
@@ -11,6 +13,7 @@ sbit relayPin = P1^4; // 定义继电器控制引脚
  */
 void relayClosed() {
     relayPin = 1; // 关闭继电器
+    DelayUs2x(25); // 延时25us
 }
 
 /**
@@ -20,4 +23,5 @@ void relayClosed() {
  */
 void relayOpened() {
     relayPin = 0; // 打开继电器
+    DelayUs2x(25); // 延时25us
 }

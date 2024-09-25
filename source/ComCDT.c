@@ -2,6 +2,7 @@
 #include "reg52.h"
 #include "include/delay.h"
 #include "include/ComCDT.h"
+#include <intrins.h>
 
 // 数码管显示的数字编码表，0~9对应的编码
 unsigned char table[] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90};
@@ -52,7 +53,7 @@ void displayDigit(unsigned char digit, unsigned char position) {
     P0 = table[digit] & mask;
 
     // 短暂延时确保显示稳定
-    DelayUs2x(45);
+    DelayUs2x(25);
 
     // 将P0恢复为高电平，表示释放总线
     P0 = 0xFF;

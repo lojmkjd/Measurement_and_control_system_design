@@ -10,7 +10,7 @@
       <TargetName>MACSD</TargetName>
       <ToolsetNumber>0x0</ToolsetNumber>
       <ToolsetName>MCS-51</ToolsetName>
-      <uAC6>0</uAC6>
+      <uAC6>8</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>AT89C52</Device>
@@ -420,6 +420,16 @@
               <FileName>Relay.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\source\Relay.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid_controller.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\pid_controller.c</FilePath>
+            </File>
+            <File>
+              <FileName>serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\serial.c</FilePath>
             </File>
           </Files>
         </Group>

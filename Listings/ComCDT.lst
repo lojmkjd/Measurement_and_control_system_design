@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   COMCDT                                                            09/24/2024 21:09:52 PAGE 1   
+C51 COMPILER V9.60.7.0   COMCDT                                                            09/25/2024 13:12:39 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE COMCDT
@@ -12,94 +12,95 @@ line level    source
    2          #include "reg52.h"
    3          #include "include/delay.h"
    4          #include "include/ComCDT.h"
-   5          
-   6          // 数码管显示的数字编码表，0~9对应的编码
-   7          unsigned char table[] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90};
-   8          
-   9          /**
-  10           * @brief 显示温度的整数和小数部分
-  11           * @param integerPart 温度的整数部分
-  12           * @param decimalPart 温度的小数部分
-  13           */
-  14          void displayTemperature(unsigned char integerPart , unsigned char decimalPart) {
-  15   1          // 显示整数部分
-  16   1          displayDigit(integerPart / 10, 0); // 显示十位
-  17   1          displayDigit(integerPart % 10, 1); // 显示个位
-  18   1          
-  19   1          // 显示小数部分
-  20   1          displayDigit(decimalPart / 10, 2); // 显示小数第一位
-  21   1          displayDigit(decimalPart % 10, 3); // 显示小数第二位
-  22   1      }
-  23          
-  24          /**
-  25           * @brief 在指定位置显示数字
-  26           * @param digit 要显示的数字（0~9）
-  27           * @param position 显示数字的位置（0: 十位, 1: 个位, 2: 小数第一位, 3: 小数第二位）
-  28           */
-  29          void displayDigit(unsigned char digit, unsigned char position) {
-  30   1          // 根据位置设置掩码：个位位置为1时，打开小数点
-  31   1          unsigned char mask = (position == 1) ? 0x7F : 0xFF;
-  32   1      
-  33   1          // 控制对应数码管位的信号
-  34   1          switch (position) {
-  35   2              case 0:
-  36   2                  dig_ten = 0;  // 十位数码管
-  37   2                  break;
-  38   2              case 1:
-  39   2                  dig_unit = 0; // 个位数码管
-  40   2                  break;
-  41   2              case 2:
-  42   2                  firstDecimalPlace = 0; // 小数第一位
-  43   2                  break;
-  44   2              case 3:
-  45   2                  secondDecimalPlace = 0; // 小数第二位
-  46   2                  break;
-  47   2              default:
-  48   2                  return; // 无效位置直接返回
-  49   2          }
-  50   1      
-  51   1          // 将数字通过查表法取出编码，并与掩码运算后输出到P0端口
-  52   1          P0 = table[digit] & mask;
-  53   1      
-  54   1          // 短暂延时确保显示稳定
-C51 COMPILER V9.60.7.0   COMCDT                                                            09/24/2024 21:09:52 PAGE 2   
+   5          #include <intrins.h>
+   6          
+   7          // 数码管显示的数字编码表，0~9对应的编码
+   8          unsigned char table[] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90};
+   9          
+  10          /**
+  11           * @brief 显示温度的整数和小数部分
+  12           * @param integerPart 温度的整数部分
+  13           * @param decimalPart 温度的小数部分
+  14           */
+  15          void displayTemperature(unsigned char integerPart , unsigned char decimalPart) {
+  16   1          // 显示整数部分
+  17   1          displayDigit(integerPart / 10, 0); // 显示十位
+  18   1          displayDigit(integerPart % 10, 1); // 显示个位
+  19   1          
+  20   1          // 显示小数部分
+  21   1          displayDigit(decimalPart / 10, 2); // 显示小数第一位
+  22   1          displayDigit(decimalPart % 10, 3); // 显示小数第二位
+  23   1      }
+  24          
+  25          /**
+  26           * @brief 在指定位置显示数字
+  27           * @param digit 要显示的数字（0~9）
+  28           * @param position 显示数字的位置（0: 十位, 1: 个位, 2: 小数第一位, 3: 小数第二位）
+  29           */
+  30          void displayDigit(unsigned char digit, unsigned char position) {
+  31   1          // 根据位置设置掩码：个位位置为1时，打开小数点
+  32   1          unsigned char mask = (position == 1) ? 0x7F : 0xFF;
+  33   1      
+  34   1          // 控制对应数码管位的信号
+  35   1          switch (position) {
+  36   2              case 0:
+  37   2                  dig_ten = 0;  // 十位数码管
+  38   2                  break;
+  39   2              case 1:
+  40   2                  dig_unit = 0; // 个位数码管
+  41   2                  break;
+  42   2              case 2:
+  43   2                  firstDecimalPlace = 0; // 小数第一位
+  44   2                  break;
+  45   2              case 3:
+  46   2                  secondDecimalPlace = 0; // 小数第二位
+  47   2                  break;
+  48   2              default:
+  49   2                  return; // 无效位置直接返回
+  50   2          }
+  51   1      
+  52   1          // 将数字通过查表法取出编码，并与掩码运算后输出到P0端口
+  53   1          P0 = table[digit] & mask;
+  54   1      
+C51 COMPILER V9.60.7.0   COMCDT                                                            09/25/2024 13:12:39 PAGE 2   
 
-  55   1          DelayUs2x(45);
-  56   1      
-  57   1          // 将P0恢复为高电平，表示释放总线
-  58   1          P0 = 0xFF;
-  59   1      
-  60   1          // 重新设置数码管为高电平，关闭显示
-  61   1          switch (position) {
-  62   2              case 0:
-  63   2                  dig_ten = 1;  // 关闭十位数码管
-  64   2                  break;
-  65   2              case 1:
-  66   2                  dig_unit = 1; // 关闭个位数码管
-  67   2                  break;
-  68   2              case 2:
-  69   2                  firstDecimalPlace = 1; // 关闭小数第一位
-  70   2                  break;
-  71   2              case 3:
-  72   2                  secondDecimalPlace = 1; // 关闭小数第二位
-  73   2                  break;
-  74   2          }
-  75   1      }
-  76          
-  77          /**
-  78           * @brief 显示时间（以分钟显示）
-  79           * @param totalSeconds 总的秒数，自动转换为分钟显示
-  80           */
-  81          void displayTime(unsigned int totalSeconds) {
-  82   1          // 将总秒数转换为分钟
-  83   1          unsigned int totalMinutes = totalSeconds / 60;
-  84   1      
-  85   1          // 显示分钟的十位
-  86   1          displayDigit(totalMinutes / 10, 2);
-  87   1      
-  88   1          // 显示分钟的个位
-  89   1          displayDigit(totalMinutes % 10, 3);
-  90   1      }
+  55   1          // 短暂延时确保显示稳定
+  56   1          DelayUs2x(25);
+  57   1      
+  58   1          // 将P0恢复为高电平，表示释放总线
+  59   1          P0 = 0xFF;
+  60   1      
+  61   1          // 重新设置数码管为高电平，关闭显示
+  62   1          switch (position) {
+  63   2              case 0:
+  64   2                  dig_ten = 1;  // 关闭十位数码管
+  65   2                  break;
+  66   2              case 1:
+  67   2                  dig_unit = 1; // 关闭个位数码管
+  68   2                  break;
+  69   2              case 2:
+  70   2                  firstDecimalPlace = 1; // 关闭小数第一位
+  71   2                  break;
+  72   2              case 3:
+  73   2                  secondDecimalPlace = 1; // 关闭小数第二位
+  74   2                  break;
+  75   2          }
+  76   1      }
+  77          
+  78          /**
+  79           * @brief 显示时间（以分钟显示）
+  80           * @param totalSeconds 总的秒数，自动转换为分钟显示
+  81           */
+  82          void displayTime(unsigned int totalSeconds) {
+  83   1          // 将总秒数转换为分钟
+  84   1          unsigned int totalMinutes = totalSeconds / 60;
+  85   1      
+  86   1          // 显示分钟的十位
+  87   1          displayDigit(totalMinutes / 10, 2);
+  88   1      
+  89   1          // 显示分钟的个位
+  90   1          displayDigit(totalMinutes % 10, 3);
+  91   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   18B20                                                             09/24/2024 21:09:52 PAGE 1   
+C51 COMPILER V9.60.7.0   18B20                                                             09/25/2024 13:12:39 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE 18B20
@@ -8,94 +8,97 @@ COMPILER INVOKED BY: E:\ARM_KEIL\Arm\Keil_v5\C51\BIN\C51.EXE source\18B20.c OPTI
 
 line level    source
 
-   1          /* 18B20.c */
-   2          #include "include/delay.h"
-   3          #include "include/18B20.h"
-   4          
-   5          // 初始化 DS18B20，返回 1 表示初始化成功，0 表示失败
-   6          bit Init_DS18B20(void)
-   7          {
-   8   1          bit dat = 0;
-   9   1      
-  10   1          DQ = 1;                // DQ 置为高电平
-  11   1          DelayUs2x(5);          // 延时 5 微秒
-  12   1          DQ = 0;                // DQ 置为低电平
-  13   1          DelayUs2x(400);        // 延时 400 微秒
-  14   1          DQ = 1;                // DQ 置为高电平
-  15   1          DelayUs2x(50);         // 延时 50 微秒
-  16   1          dat = DQ;              // 读取 DQ 状态
-  17   1          DelayUs2x(25);         // 延时 25 微秒
-  18   1      
-  19   1          return dat;
-  20   1      }
-  21          
-  22          // 读取一个字节
-  23          unsigned char ReadOneChar(void)
-  24          {
-  25   1          unsigned char i, dat = 0;
-  26   1      
-  27   1          for (i = 0; i < 8; i++)
-  28   1          {
-  29   2              DQ = 0;            // 将 DQ 置为低电平开始传输
-  30   2              dat >>= 1;         // 数据右移一位
-  31   2              DQ = 1;            // DQ 置为高电平准备读取
-  32   2              if (DQ)            // 若 DQ 为高电平，将最高位设为 1
-  33   2                  dat |= 0x80;
-  34   2              DelayUs2x(25);     // 延时 25 微秒
-  35   2          }
-  36   1          return dat;            // 返回读取到的字节
-  37   1      }
-  38          
-  39          // 写入一个字节
-  40          void WriteOneChar(unsigned char dat)
-  41          {
-  42   1          unsigned char i;
-  43   1      
-  44   1          for (i = 0; i < 8; i++)
-  45   1          {
-  46   2              DQ = 0;            // 将 DQ 置为低电平开始写入
-  47   2              DQ = dat & 0x01;   // 写入最低位
-  48   2              DelayUs2x(25);     // 延时 25 微秒
-  49   2              DQ = 1;            // 释放总线
-  50   2              dat >>= 1;         // 数据右移一位
-  51   2          }
-  52   1          DelayUs2x(25);         // 延时 25 微秒结束传输
-  53   1      }
-  54          
-C51 COMPILER V9.60.7.0   18B20                                                             09/24/2024 21:09:52 PAGE 2   
+   1          /*-----------------------------------------------
+   2            ���ƣ�18B20�¶ȴ�����
+   3            �޸ģ���
+   4            ���ݣ�18B20�����¶ȼ���Ӧ����������
+   5          ------------------------------------------------*/
+   6          #include"include/delay.h"
+   7          #include"include/18b20.h"
+   8          #include <intrins.h>
+   9          /*------------------------------------------------
+  10                              18b20��ʼ��
+  11          ------------------------------------------------*/
+  12          bit Init_DS18B20(void)
+  13          {
+  14   1       bit dat=0;
+  15   1       DQ = 1;    //DQ��λ
+  16   1       DelayUs2x(5);   //������ʱ
+  17   1       DQ = 0;         //��Ƭ����DQ����
+  18   1       DelayUs2x(200); //��ȷ��ʱ ���� 480us С��960us
+  19   1       DelayUs2x(200);
+  20   1       DQ = 1;        //��������
+  21   1       DelayUs2x(50); //15~60us �� ����60-240us�Ĵ�������
+  22   1       dat=DQ;        //���x=0���ʼ���ɹ�, x=1���ʼ��ʧ��
+  23   1       DelayUs2x(25); //������ʱ����
+  24   1       return dat;
+  25   1      }
+  26          
+  27          /*------------------------------------------------
+  28                              ��ȡһ���ֽ�
+  29          ------------------------------------------------*/
+  30          unsigned char ReadOneChar(void)
+  31          {
+  32   1      unsigned char i=0;
+  33   1      unsigned char dat = 0;
+  34   1      for (i=8;i>0;i--)
+  35   1       {
+  36   2        DQ = 0; // �������ź�
+  37   2        dat>>=1;
+  38   2        DQ = 1; // �������ź�
+  39   2        if(DQ)
+  40   2         dat|=0x80;
+  41   2        DelayUs2x(25);
+  42   2       }
+  43   1       return(dat);
+  44   1      }
+  45          /*------------------------------------------------
+  46                              д��һ���ֽ�
+  47          ------------------------------------------------*/
+  48          void WriteOneChar(unsigned char dat)
+  49          {
+  50   1       unsigned char i=0;
+  51   1       for (i=8; i>0; i--)
+  52   1       {
+  53   2        DQ = 0;
+  54   2        DQ = dat&0x01;
+C51 COMPILER V9.60.7.0   18B20                                                             09/25/2024 13:12:39 PAGE 2   
 
-  55          // 读取温度
-  56          unsigned int ReadTemperature(void)
-  57          {
-  58   1          unsigned char lsb, msb;
-  59   1          unsigned int temperature;
-  60   1      
-  61   1          if (!Init_DS18B20())   // 初始化 DS18B20
-  62   1              return 0xFFFF;     // 若初始化失败，返回错误代码
-  63   1      
-  64   1          WriteOneChar(0xCC);    // 跳过 ROM 命令
-  65   1          WriteOneChar(0x44);    // 启动温度转换
-  66   1          DelayMs(10);           // 等待转换完成
-  67   1      
-  68   1          Init_DS18B20();        // 再次初始化传感器
-  69   1          WriteOneChar(0xCC);    // 跳过 ROM 命令
-  70   1          WriteOneChar(0xBE);    // 读取 Scratchpad 数据
-  71   1      
-  72   1          lsb = ReadOneChar();   // 读取低字节
-  73   1          msb = ReadOneChar();   // 读取高字节
-  74   1      
-  75   1          temperature = (msb << 8) | lsb; // 合并为完整的 16 位温度数据
-  76   1      
-  77   1          // 检查温度值是否在有效范围内
-  78   1          if (temperature > 1000) // 根据具体情况修改有效范围
-  79   1              return 0xFFFF;     // 若超出范围，返回错误代码
-  80   1      
-  81   1          return temperature;    // 返回温度值
-  82   1      }
+  55   2        DelayUs2x(25);
+  56   2        DQ = 1;
+  57   2        dat>>=1;
+  58   2       }
+  59   1      DelayUs2x(25);
+  60   1      }
+  61          
+  62          /*------------------------------------------------
+  63                              ��ȡ�¶�
+  64          ------------------------------------------------*/
+  65          unsigned int ReadTemperature(void)
+  66          {
+  67   1      unsigned char a=0;
+  68   1      unsigned int b=0;
+  69   1      unsigned int t=0;
+  70   1      Init_DS18B20();
+  71   1      WriteOneChar(0xCC); // ����������кŵĲ���
+  72   1      WriteOneChar(0x44); // �����¶�ת��
+  73   1      DelayMs(10);
+  74   1      Init_DS18B20();
+  75   1      WriteOneChar(0xCC); //����������кŵĲ��� 
+  76   1      WriteOneChar(0xBE); //��ȡ�¶ȼĴ����ȣ����ɶ�9���Ĵ����� ǰ��
+             -�������¶�
+  77   1      a=ReadOneChar();   //��λ
+  78   1      b=ReadOneChar();   //��λ
+  79   1      
+  80   1      b<<=8;
+  81   1      t=a+b;
+  82   1      
+  83   1      return(t);
+  84   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    174    ----
+   CODE SIZE        =    183    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

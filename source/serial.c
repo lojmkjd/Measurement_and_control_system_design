@@ -1,5 +1,6 @@
 #include "reg52.h"
 #include "include/serial.h"
+#include <intrins.h>
 
 #define BAUD_RATE 9600
 #define FOSC 11059200 // 假设晶振频率为 11.0592 MHz

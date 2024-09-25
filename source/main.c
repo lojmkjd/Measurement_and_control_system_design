@@ -6,15 +6,17 @@
 #include "include/pid_controller.h"
 #include "include/IKeyEvent.h"
 #include "include/serial.h"
+#include <intrins.h>
 #include <stdio.h>
-
+#include "include/delay.h"
 
 // 定义常量
 #define TIMER_0_RELOADS_VALUE 1000    // 定时器0重装值，为每1ms
 #define TEMP_CONVERSION_FACTOR 0.0625 // 温度转换系数
-#define LOWER_TEMP_LIMIT 25           // 温度下限
+#define LOWER_TEMP_LIMIT 28           // 温度下限
 #define UPPER_TEMP_LIMIT 30           // 温度上限
 #define TARGET_TEMPERATURE 28         // 目标温度
+#define RELAY_HYSTERESIS 2            // 滞后带宽，单位°C
 
 // 任务调度器的任务结构体
 typedef struct
@@ -25,8 +27,8 @@ typedef struct
 } Task;
 
 #define MAX_TASKS 5
-Task tasks[MAX_TASKS];       // 任务列表
-unsigned char taskCount = 0; // 任务数量
+Task tasks[MAX_TASKS];      // 任务列表
+unsigned int taskCount = 0; // 任务数量
 
 // 调度器函数声明
 void initializeSystem();
@@ -37,20 +39,20 @@ void scheduler();
 void taskTemperatureUpdate();
 void taskControlRelay();
 void taskSendTemperature();
+void taskControlBuzzer();
 
 // 定时器函数声明
 void initializeTimer0();
 void timer0InterruptHandling(void);
 
 // 全局变量声明
-unsigned int currentTime = 0;                   // 当前时间，以1ms为单位
-unsigned char temperature = 0;                  // 当前温度
+unsigned char currentTime = 0;                  // 当前时间，以1ms为单位
+float temperature = 0.0;                        // 当前温度
 unsigned char integerPart = 0, decimalPart = 0; // 温度的整数部分和小数部分
 unsigned char setpoint = TARGET_TEMPERATURE;    // 目标温度
 unsigned char integral = 0;                     // PID积分项
 unsigned char previous_error = 0;               // 上一个误差
 bit displayTemperatureOrTime = 1;               // 控制温度/时间显示切换
-
 
 void main(void)
 {
@@ -66,11 +68,9 @@ void main(void)
     // 无限循环
     while (1)
     {
-        // 扫描按键事件
-        checkButtons();
-
         // 调用调度器处理任务
         scheduler();
+        checkButtons();
     }
 }
 
@@ -81,9 +81,10 @@ void initializeSystem()
     initializeTimer0();
 
     // 添加任务到调度器
-    addTask(taskTemperatureUpdate, 8); // 每8毫秒更新一次温度显示
-    addTask(taskControlRelay, 1000);      // 每1秒控制一次继电器
-    addTask(taskSendTemperature, 500);    // 每0.5毫秒发送一次温度信息
+    addTask(taskTemperatureUpdate, 10); // 每10毫秒更新一次温度
+    addTask(taskControlRelay, 1000);    // 每1秒控制一次继电器
+    addTask(taskControlBuzzer, 2);      // 每1秒发送一次温度信息
+    // addTask(taskSendTemperature, 500);  // 每0.5秒发送一次温度信息
 }
 
 // 初始化定时器0
@@ -135,11 +136,11 @@ void taskTemperatureUpdate()
     temperature = ReadTemperature() * TEMP_CONVERSION_FACTOR;
 
     // 计算温度的整数部分和小数部分
-    integerPart = (unsigned int)temperature;
-    decimalPart = (unsigned int)((temperature - integerPart) * 100 + 0.5);
+    integerPart = (int)temperature;
+    decimalPart = (int)((temperature - integerPart) * 100);
 
     // 根据显示模式，显示温度或时间
-    if (displayTemperatureOrTime == 1)
+    if (displayTemperatureOrTime)
     {
         displayTemperature(integerPart, decimalPart);
     }
@@ -152,22 +153,43 @@ void taskTemperatureUpdate()
 // 继电器控制任务
 void taskControlRelay()
 {
-    // 控制逻辑：低于下限温度打开继电器并蜂鸣，超过上限关闭继电器并蜂鸣
-    if (temperature < LOWER_TEMP_LIMIT)
+    // 控制逻辑：低于下限温度-滞后带宽打开继电器，超过上限温度+滞后带宽关闭继电器
+    if (temperature < (LOWER_TEMP_LIMIT - RELAY_HYSTERESIS))
     {
         relayOpened();
-        buzzerOn();
+        DelayUs2x(25);
     }
-    else if (temperature > UPPER_TEMP_LIMIT)
+    else if (temperature > (UPPER_TEMP_LIMIT + RELAY_HYSTERESIS))
     {
         relayClosed();
-        buzzerOn();
+        DelayUs2x(25);
     }
     else
     {
-        // 使用PID控制温度在目标范围内
+        // 当温度在上下限之间时使用PID控制
         pIDControl();
-        buzzerOff();
+        DelayUs2x(25);
+    }
+}
+
+void taskControlBuzzer()
+{
+    // 根据温度判断蜂鸣器状态
+    if (temperature < LOWER_TEMP_LIMIT)
+    {
+        buzzerOn(); // 温度低于下限时，打开蜂鸣器
+        DelayUs2x(25);
+    }
+    else if (temperature > UPPER_TEMP_LIMIT)
+    {
+        buzzerOff(); // 温度高于上限时，关闭蜂鸣器
+        DelayUs2x(25);
+    }
+    else
+    {
+        // 在温度正常范围内，可以选择关闭蜂鸣器或保持当前状态
+        buzzerOff(); // 可选：在正常范围内关闭蜂鸣器
+        DelayUs2x(25);
     }
 }
 
@@ -188,7 +210,8 @@ void scheduler()
 // 发送温度任务
 void taskSendTemperature()
 {
-    char buffer[20];
-    sprintf(buffer, "Temperature: %d.%02d\n", integerPart, decimalPart);
+    unsigned char buffer[10];
+    sprintf(buffer, "Temperature: %d.%d C", integerPart, decimalPart);
     sendSerial(buffer); // 发送温度信息
+    DelayUs2x(25);
 }

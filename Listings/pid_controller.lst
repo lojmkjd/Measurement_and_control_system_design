@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   PID_CONTROLLER                                                    09/24/2024 21:09:52 PAGE 1   
+C51 COMPILER V9.60.7.0   PID_CONTROLLER                                                    09/25/2024 13:12:39 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE PID_CONTROLLER
@@ -14,46 +14,56 @@ line level    source
    4          #include "include/relay.h"
    5          #include "include/buzzer.h"
    6          #include "reg52.h"
-   7          
-   8          /**
-   9           * @brief PID 控制函数
-  10           *
-  11           * 根据当前温度与设定点的误差计算 PID 输出，并控制继电器
-  12           */
-  13          void pIDControl() {
-  14   1      
-  15   1          char error,derivative,output;
-  16   1          // 计算当前误差
-  17   1          error = setpoint - temperature; 
-  18   1      
-  19   1          // 更新积分值
-  20   1          integral += error; 
+   7          #include <intrins.h>
+   8          #include "include/delay.h"
+   9          
+  10          /**
+  11           * @brief PID 控制函数
+  12           *
+  13           * 根据当前温度与设定点的误差计算 PID 输出，并控制继电器
+  14           */
+  15          void pIDControl()
+  16          {
+  17   1      
+  18   1          char error, derivative, output;
+  19   1          // 计算当前误差
+  20   1          error = setpoint - temperature;
   21   1      
-  22   1          // 计算微分值
-  23   1          derivative = error - previous_error; 
+  22   1          // 更新积分值
+  23   1          integral += error;
   24   1      
-  25   1          // 保存当前误差用于下次计算
-  26   1          previous_error = error; 
+  25   1          // 计算微分值
+  26   1          derivative = error - previous_error;
   27   1      
-  28   1          // 计算 PID 输出
-  29   1          output = (KP * error) + (KI * integral) + (KD * derivative);
+  28   1          // 保存当前误差用于下次计算
+  29   1          previous_error = error;
   30   1      
-  31   1          // 根据 PID 输出控制继电器
-  32   1          if (output > 0) {
-  33   2              relayOpened();  // 打开继电器
-  34   2          } else {
-  35   2              relayClosed();  // 关闭继电器
-  36   2          }
-  37   1      }
+  31   1          // 计算 PID 输出
+  32   1          output = (KP * error) + (KI * integral) + (KD * derivative);
+  33   1      
+  34   1          // 根据 PID 输出控制继电器
+  35   1          if (output > 0)
+  36   1          {
+  37   2              relayOpened();  // 打开继电器
+  38   2              DelayUs2x(25); // 延时，防止继电器频繁开关
+  39   2          }
+  40   1          else
+  41   1          {
+  42   2              relayClosed();  // 关闭继电器
+  43   2              DelayUs2x(25); // 延时，防止继电器频繁开关
+  44   2          }
+  45   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    117    ----
+   CODE SIZE        =    141    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----       2
    IDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   PID_CONTROLLER                                                    09/25/2024 13:12:39 PAGE 2   
+
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 

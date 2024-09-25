@@ -17,11 +17,4 @@ extern bit displayTemperatureOrTime;  // 控制当前显示的内容（温度或
  */
 void checkButtons(void);
 
-/**
- * @brief 检查单个按钮的状态并处理防抖
- * 
- * @param button 按钮的当前状态（0 表示按下，1 表示释放）
- */
-void checkButtonState(bit button);
-
-#endif // _MY_RELAY_CONTROL_H_
+#endif

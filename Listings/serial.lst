@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   SERIAL                                                            09/24/2024 21:09:52 PAGE 1   
+C51 COMPILER V9.60.7.0   SERIAL                                                            09/25/2024 13:12:39 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SERIAL
@@ -10,40 +10,41 @@ line level    source
 
    1          #include "reg52.h"
    2          #include "include/serial.h"
-   3          
-   4          #define BAUD_RATE 9600
-   5          #define FOSC 11059200 // 假设晶振频率为 11.0592 MHz
-   6          #define TH1_VALUE (256 - (FOSC / (32 * BAUD_RATE)))
-   7          
-   8          /**
-   9           * @brief 初始化串口
-  10           *
-  11           * 配置串口工作方式和波特率，并启动定时器
-  12           */
-  13          void initSerial(void) {
-  14   1          SCON = 0x50; // 设置串口工作方式1（8位可变波特率）
-  15   1          TMOD &= 0x0F; // 清除定时器1的高四位
-  16   1          TMOD |= 0x20; // 设置定时器1为模式2（8位自动重装载）
-  17   1      
-  18   1          TH1 = TH1_VALUE; // 设置波特率
-  19   1          TL1 = TH1_VALUE; // 初始化定时器值
-  20   1          TR1 = 1; // 启动定时器1
-  21   1          EA = 1; // 允许全局中断
-  22   1          ES = 1; // 允许串口中断
-  23   1      }
-  24          
-  25          /**
-  26           * @brief 发送串口数据
-  27           *
-  28           * @param tmpdata 指向要发送的数据的指针
-  29           */
-  30          void sendSerial(char *tmpdata) {
-  31   1          while (*tmpdata) {
-  32   2              SBUF = *tmpdata++; // 发送数据
-  33   2              while (!TI); // 等待发送完成
-  34   2              TI = 0; // 清除发送中断标志
-  35   2          }
-  36   1      }
+   3          #include <intrins.h>
+   4          
+   5          #define BAUD_RATE 9600
+   6          #define FOSC 11059200 // 假设晶振频率为 11.0592 MHz
+   7          #define TH1_VALUE (256 - (FOSC / (32 * BAUD_RATE)))
+   8          
+   9          /**
+  10           * @brief 初始化串口
+  11           *
+  12           * 配置串口工作方式和波特率，并启动定时器
+  13           */
+  14          void initSerial(void) {
+  15   1          SCON = 0x50; // 设置串口工作方式1（8位可变波特率）
+  16   1          TMOD &= 0x0F; // 清除定时器1的高四位
+  17   1          TMOD |= 0x20; // 设置定时器1为模式2（8位自动重装载）
+  18   1      
+  19   1          TH1 = TH1_VALUE; // 设置波特率
+  20   1          TL1 = TH1_VALUE; // 初始化定时器值
+  21   1          TR1 = 1; // 启动定时器1
+  22   1          EA = 1; // 允许全局中断
+  23   1          ES = 1; // 允许串口中断
+  24   1      }
+  25          
+  26          /**
+  27           * @brief 发送串口数据
+  28           *
+  29           * @param tmpdata 指向要发送的数据的指针
+  30           */
+  31          void sendSerial(char *tmpdata) {
+  32   1          while (*tmpdata) {
+  33   2              SBUF = *tmpdata++; // 发送数据
+  34   2              while (!TI); // 等待发送完成
+  35   2              TI = 0; // 清除发送中断标志
+  36   2          }
+  37   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
